@@ -24,13 +24,13 @@ const client = new elasticsearch_1.Client({ node: process.env.ES_URL || "http://
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, e_1, _b, _c;
-        var _d, _e;
+        var _d, _e, _f, _g, _h, _j, _k;
         const feed = new feed_1.Feed({
-            title: 'Your Website RSS Feed',
+            title: 'RSS Jurisprudência',
             id: 'http://localhost:3000/jurisprudencia',
             link: 'http://localhost:3000/jurisprudencia',
             description: 'Latest updates from Your Website',
-            copyright: ''
+            copyright: 'Supremo Tribunal da Justiça, 2024'
         });
         let p = client.helpers.scrollDocuments({
             index: jurisprudencia_document_1.JurisprudenciaVersion,
@@ -41,21 +41,24 @@ function main() {
         });
         let counter = 0;
         try {
-            for (var _f = true, p_1 = __asyncValues(p), p_1_1; p_1_1 = yield p_1.next(), _a = p_1_1.done, !_a; _f = true) {
+            for (var _l = true, p_1 = __asyncValues(p), p_1_1; p_1_1 = yield p_1.next(), _a = p_1_1.done, !_a; _l = true) {
                 _c = p_1_1.value;
-                _f = false;
+                _l = false;
                 const acordao = _c;
-                console.log(acordao["Número de Processo"]);
-                console.log(acordao.Data);
                 counter++;
                 let [dd, mm, yyyy] = ((_d = acordao.Data) === null || _d === void 0 ? void 0 : _d.split("/")) || "01/01/1900".split("/");
-                let data = new Date(parseInt(yyyy), parseInt(mm), parseInt(dd), 12);
+                let data = new Date(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd), 12);
                 let id = ((_e = acordao.ECLI) === null || _e === void 0 ? void 0 : _e.startsWith("ECLI:PT:STJ:")) ? `/ecli/${acordao.ECLI}` : `/${encodeURIComponent(acordao["Número de Processo"])}/${acordao.UUID}`;
                 feed.addItem({
                     title: acordao["Número de Processo"] || "Número de Processo não encontrado",
                     id: id,
                     link: "localhost:3000" + id,
-                    description: acordao.Sumário || "Sem sumário",
+                    content: "Secção: " + ((_f = acordao.Secção) === null || _f === void 0 ? void 0 : _f.Show) + "<br>" +
+                        "Área: " + ((_g = acordao.Área) === null || _g === void 0 ? void 0 : _g.Show) + "<br>" +
+                        "Relator: " + ((_h = acordao["Relator Nome Profissional"]) === null || _h === void 0 ? void 0 : _h.Show) + "<br>" +
+                        "Votação: " + ((_j = acordao.Votação) === null || _j === void 0 ? void 0 : _j.Show) + "<br>" +
+                        "Decisão: " + ((_k = acordao.Decisão) === null || _k === void 0 ? void 0 : _k.Show) +
+                        acordao.Sumário || "Sumário não encontrado",
                     date: data
                 });
                 if (counter >= 5) {
@@ -66,21 +69,11 @@ function main() {
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
         finally {
             try {
-                if (!_f && !_a && (_b = p_1.return)) yield _b.call(p_1);
+                if (!_l && !_a && (_b = p_1.return)) yield _b.call(p_1);
             }
             finally { if (e_1) throw e_1.error; }
         }
         yield (0, promises_1.writeFile)("rss.xml", feed.rss2());
-        /*
-        const response = await client.search<JurisprudenciaDocument>({
-            index: JurisprudenciaVersion,
-            //_source: ["Número de Processo", "Relator Nome Profissional"],
-        })
-        console.log(response.hits.hits[0])
-        let acordao = response.hits.hits[0]
-        console.log(acordao._source?.["Número de Processo"])
-        console.log(acordao._source?.["Relator Nome Profissional"]?.Show)
-        */
     });
 }
 main();

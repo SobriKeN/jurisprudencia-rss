@@ -7,11 +7,11 @@ const client = new Client({ node: process.env.ES_URL || "http://localhost:9200",
 
 async function main() {
     const feed = new Feed({
-        title: 'Your Website RSS Feed',
+        title: 'RSS Jurisprudência',
         id: 'http://localhost:3000/jurisprudencia',
         link: 'http://localhost:3000/jurisprudencia',
         description: 'Latest updates from Your Website',
-        copyright: ''
+        copyright: 'Supremo Tribunal da Justiça, 2024'
     });
 
     let p = client.helpers.scrollDocuments<JurisprudenciaDocument>({
@@ -24,18 +24,21 @@ async function main() {
 
     let counter = 0
     for await (const acordao of p){
-        console.log(acordao["Número de Processo"])
-        console.log(acordao.Data)
         counter++
 
         let [dd,mm,yyyy] = acordao.Data?.split("/") || "01/01/1900".split("/")
-        let data = new Date(parseInt(yyyy),parseInt(mm),parseInt(dd),12)
+        let data = new Date(parseInt(yyyy),parseInt(mm) - 1,parseInt(dd),12)
         let id = acordao.ECLI?.startsWith("ECLI:PT:STJ:") ? `/ecli/${acordao.ECLI}` : `/${encodeURIComponent(acordao["Número de Processo"]!)}/${acordao.UUID}`
         feed.addItem({
             title: acordao["Número de Processo"] || "Número de Processo não encontrado",
             id: id,
             link: "localhost:3000" + id,
-            description: acordao.Sumário || "Sem sumário",
+            content: "Secção: " + acordao.Secção?.Show + "<br>" +
+                    "Área: " + acordao.Área?.Show +  "<br>" +
+                    "Relator: " + acordao["Relator Nome Profissional"]?.Show +  "<br>" +
+                    "Votação: " + acordao.Votação?.Show +  "<br>" +
+                    "Decisão: " + acordao.Decisão?.Show +
+                    acordao.Sumário || "Sumário não encontrado",
             date: data 
         });
 
@@ -45,18 +48,5 @@ async function main() {
     }
 
     await writeFile("rss.xml",feed.rss2())
-    
-
-
-    /*
-    const response = await client.search<JurisprudenciaDocument>({
-        index: JurisprudenciaVersion,
-        //_source: ["Número de Processo", "Relator Nome Profissional"], 
-    })
-    console.log(response.hits.hits[0])
-    let acordao = response.hits.hits[0]
-    console.log(acordao._source?.["Número de Processo"])
-    console.log(acordao._source?.["Relator Nome Profissional"]?.Show)
-    */
 }
 main()
