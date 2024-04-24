@@ -33,11 +33,9 @@ async function main() {
             title: acordao["Número de Processo"] || "Número de Processo não encontrado",
             id: id,
             link: "localhost:3000" + id,
-            content: "Secção: " + acordao.Secção?.Show + "<br>" +
-                    "Área: " + acordao.Área?.Show +  "<br>" +
-                    "Relator: " + acordao["Relator Nome Profissional"]?.Show +  "<br>" +
-                    "Votação: " + acordao.Votação?.Show +  "<br>" +
-                    "Decisão: " + acordao.Decisão?.Show +
+            content: acordao.Área?.Show + " - " + acordao["Meio Processual"]?.Show + " - " + acordao["Relator Nome Profissional"]?.Show + " - " + acordao.Secção?.Show + "<br>" +
+                    "Votação: " + acordao.Votação?.Show +  "   " + "Decisão: " + acordao.Decisão?.Show + "<br>" +
+                    "Descritores: " + acordao.Descritores?.Show +
                     acordao.Sumário || "Sumário não encontrado",
             date: data 
         });

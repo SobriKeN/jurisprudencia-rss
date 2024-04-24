@@ -24,7 +24,7 @@ const client = new elasticsearch_1.Client({ node: process.env.ES_URL || "http://
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, e_1, _b, _c;
-        var _d, _e, _f, _g, _h, _j, _k;
+        var _d, _e, _f, _g, _h, _j, _k, _l, _m;
         const feed = new feed_1.Feed({
             title: 'RSS Jurisprudência',
             id: 'http://localhost:3000/jurisprudencia',
@@ -41,9 +41,9 @@ function main() {
         });
         let counter = 0;
         try {
-            for (var _l = true, p_1 = __asyncValues(p), p_1_1; p_1_1 = yield p_1.next(), _a = p_1_1.done, !_a; _l = true) {
+            for (var _o = true, p_1 = __asyncValues(p), p_1_1; p_1_1 = yield p_1.next(), _a = p_1_1.done, !_a; _o = true) {
                 _c = p_1_1.value;
-                _l = false;
+                _o = false;
                 const acordao = _c;
                 counter++;
                 let [dd, mm, yyyy] = ((_d = acordao.Data) === null || _d === void 0 ? void 0 : _d.split("/")) || "01/01/1900".split("/");
@@ -53,11 +53,9 @@ function main() {
                     title: acordao["Número de Processo"] || "Número de Processo não encontrado",
                     id: id,
                     link: "localhost:3000" + id,
-                    content: "Secção: " + ((_f = acordao.Secção) === null || _f === void 0 ? void 0 : _f.Show) + "<br>" +
-                        "Área: " + ((_g = acordao.Área) === null || _g === void 0 ? void 0 : _g.Show) + "<br>" +
-                        "Relator: " + ((_h = acordao["Relator Nome Profissional"]) === null || _h === void 0 ? void 0 : _h.Show) + "<br>" +
-                        "Votação: " + ((_j = acordao.Votação) === null || _j === void 0 ? void 0 : _j.Show) + "<br>" +
-                        "Decisão: " + ((_k = acordao.Decisão) === null || _k === void 0 ? void 0 : _k.Show) +
+                    content: ((_f = acordao.Área) === null || _f === void 0 ? void 0 : _f.Show) + " - " + ((_g = acordao["Meio Processual"]) === null || _g === void 0 ? void 0 : _g.Show) + " - " + ((_h = acordao["Relator Nome Profissional"]) === null || _h === void 0 ? void 0 : _h.Show) + " - " + ((_j = acordao.Secção) === null || _j === void 0 ? void 0 : _j.Show) + "<br>" +
+                        "Votação: " + ((_k = acordao.Votação) === null || _k === void 0 ? void 0 : _k.Show) + "    " + "Decisão: " + ((_l = acordao.Decisão) === null || _l === void 0 ? void 0 : _l.Show) + "<br>" +
+                        "Descritores: " + ((_m = acordao.Descritores) === null || _m === void 0 ? void 0 : _m.Show) +
                         acordao.Sumário || "Sumário não encontrado",
                     date: data
                 });
@@ -69,7 +67,7 @@ function main() {
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
         finally {
             try {
-                if (!_l && !_a && (_b = p_1.return)) yield _b.call(p_1);
+                if (!_o && !_a && (_b = p_1.return)) yield _b.call(p_1);
             }
             finally { if (e_1) throw e_1.error; }
         }
