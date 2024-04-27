@@ -21,7 +21,6 @@ async function generateRSSFeed(inputString: string) {
     if (inputString != "Geral"){
         p = client.helpers.scrollDocuments<JurisprudenciaDocument>({
             index: JurisprudenciaVersion,
-            //_source: ["Número de Processo", "Relator Nome Profissional", "Data"],
             query: {
                 term: {
                     "Área.Show": inputString
@@ -73,7 +72,8 @@ async function generateRSSFeed(inputString: string) {
             date: data 
         });
 
-        if(counter >= 10){
+        
+        if(counter >= 2000){
             break;
         }
     }
