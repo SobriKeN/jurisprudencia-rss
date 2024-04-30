@@ -86,7 +86,7 @@ async function generateRSSFeed(inputString: string) {
         });
 
         
-        if(counter >= 2000){
+        if(counter >= 200){
             await result.clear()
             break;
         }
