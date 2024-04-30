@@ -87,13 +87,13 @@ async function generateRSSFeed(inputString: string) {
 }
 
 
-function main(){
-    generateRSSFeed("Geral")
-    generateRSSFeed("Área Criminal")
-    generateRSSFeed("Área Cível")
-    generateRSSFeed("Área Social")
-    generateRSSFeed("Contencioso")
-    generateRSSFeed("Formação")
+async function main(){
+    await generateRSSFeed("Geral")
+    await generateRSSFeed("Área Criminal")
+    await generateRSSFeed("Área Cível")
+    await generateRSSFeed("Área Social")
+    await generateRSSFeed("Contencioso")
+    await generateRSSFeed("Formação")
 }
 
 main()
