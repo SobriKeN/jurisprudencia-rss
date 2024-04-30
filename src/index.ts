@@ -1,4 +1,5 @@
 import { Client } from "@elastic/elasticsearch";
+import { ScrollSearchResponse } from "@elastic/elasticsearch/lib/helpers";
 import { JurisprudenciaDocument, JurisprudenciaVersion } from "@stjiris/jurisprudencia-document";
 import { Feed } from "feed";
 import { writeFile } from "fs/promises";
@@ -16,11 +17,12 @@ async function generateRSSFeed(inputString: string) {
         copyright: 'Supremo Tribunal da Justiça, 2024'
     });
 
-    let p;
+    let p:AsyncIterable<ScrollSearchResponse<JurisprudenciaDocument, unknown>>   
 
     if (inputString != "Geral"){
-        p = client.helpers.scrollDocuments<JurisprudenciaDocument>({
+        p = client.helpers.scrollSearch<JurisprudenciaDocument>({
             index: JurisprudenciaVersion,
+            size: 1,
             query: {
                 term: {
                     "Área.Show": inputString
@@ -32,17 +34,19 @@ async function generateRSSFeed(inputString: string) {
         })
     }
     else {
-        p = client.helpers.scrollDocuments<JurisprudenciaDocument>({
+        p = client.helpers.scrollSearch<JurisprudenciaDocument>({
             index: JurisprudenciaVersion,
+            size: 1,
             sort: {
                 Data: "desc"
-            }
+            },
         })
     }
 
 
     let counter = 0
-    for await (const acordao of p){
+    for await (const result of p){
+        const acordao = result.body.hits.hits[0]._source!;
         counter++
         
         let [dd,mm,yyyy] = acordao.Data?.split("/") || "01/01/1900".split("/")
@@ -74,6 +78,7 @@ async function generateRSSFeed(inputString: string) {
 
         
         if(counter >= 2000){
+            await result.clear()
             break;
         }
     }
