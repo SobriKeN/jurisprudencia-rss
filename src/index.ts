@@ -23,6 +23,10 @@ async function generateRSSFeed(inputString: string) {
     if (inputString != "Geral"){
         p = client.helpers.scrollSearch<JurisprudenciaDocument>({
             index: JurisprudenciaVersion,
+            _source: ["Data", "ECLI", "UUID", "Descritores", 
+            "Meio Processual.Show", "Número de Processo", "Área.Show", 
+            "Relator Nome Profissional.Show", "Secção.Show",
+            "Votação.Show", "Decisão.Show", "Sumário"],
             size: 1,
             query: {
                 term: {
@@ -37,6 +41,10 @@ async function generateRSSFeed(inputString: string) {
     else {
         p = client.helpers.scrollSearch<JurisprudenciaDocument>({
             index: JurisprudenciaVersion,
+            _source: ["Data", "ECLI", "UUID", "Descritores", 
+            "Meio Processual.Show", "Número de Processo", "Área.Show", 
+            "Relator Nome Profissional.Show", "Secção.Show",
+            "Votação.Show", "Decisão.Show", "Sumário"],
             size: 1,
             sort: {
                 Data: "desc"
