@@ -6,13 +6,14 @@ import { writeFile } from "fs/promises";
 import path from "path";
 
 const client = new Client({ node: process.env.ES_URL || "http://localhost:9200", auth: { username: "elastic", password: "elasticsearch" } })
+const publicLink = process.env.RSS_LINK || "http://localhost:3000/jurisprudencia"
 
 
 async function generateRSSFeed(inputString: string) {
     const feed = new Feed({
         title: 'RSS Jurisprudência - ' + inputString,
-        id: 'http://localhost:3000/jurisprudencia',
-        link: 'http://localhost:3000/jurisprudencia',
+        id: publicLink,
+        link: publicLink,
         description: 'Latest updates from Your Website',
         copyright: 'Supremo Tribunal da Justiça, 2024'
     });
@@ -68,7 +69,7 @@ async function generateRSSFeed(inputString: string) {
         feed.addItem({
             title: acordao["Número de Processo"] || "Número de Processo não encontrado",
             id: id,
-            link: "localhost:3000" + id,
+            link: publicLink + id,
             content: acordao.Área?.Show + " - " + meioProcessualFormatado + " - " + acordao["Relator Nome Profissional"]?.Show + " - " + acordao.Secção?.Show + "<br>" +
                     "Votação: " + acordao.Votação?.Show +  "&nbsp; &nbsp; &nbsp;" + "Decisão: " + acordao.Decisão?.Show + "<br>" +
                     "Descritores: " + descritoresFormatados + "<br> <br>" + 
@@ -77,7 +78,7 @@ async function generateRSSFeed(inputString: string) {
         });
 
         
-        if(counter >= 2000){
+        if(counter >= 10){
             await result.clear()
             break;
         }
