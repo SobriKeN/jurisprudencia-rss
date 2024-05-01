@@ -100,7 +100,7 @@ async function generateRSSFeed(inputString: string) {
     await writeFile(pathToRSS,feed.rss2())
 }
 
-
+/*
 async function main(){
     await generateRSSFeed("Geral")
     await generateRSSFeed("Área Criminal")
@@ -109,5 +109,14 @@ async function main(){
     await generateRSSFeed("Contencioso")
     await generateRSSFeed("Formação")
 }
+*/
+
+async function main(){
+    const areas = ["Geral", "Área Criminal", "Área Cível", "Área Social", "Contencioso", "Formação"];
+    const feedPromises = areas.map(area => generateRSSFeed(area));
+    await Promise.all(feedPromises);
+}
+
+
 
 main()
