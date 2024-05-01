@@ -25,27 +25,21 @@ const feed_1 = require("feed");
 const promises_1 = require("fs/promises");
 const path_1 = __importDefault(require("path"));
 const client = new elasticsearch_1.Client({ node: process.env.ES_URL || "http://localhost:9200", auth: { username: "elastic", password: "elasticsearch" } });
-const publicLink = process.env.RSS_LINK || "http://localhost:3000/jurisprudencia";
 function generateRSSFeed(inputString) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, e_1, _b, _c;
         var _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
         const feed = new feed_1.Feed({
             title: 'RSS Jurisprudência - ' + inputString,
-            id: publicLink,
-            link: publicLink,
+            id: 'http://localhost:3000/jurisprudencia',
+            link: 'http://localhost:3000/jurisprudencia',
             description: 'Latest updates from Your Website',
             copyright: 'Supremo Tribunal da Justiça, 2024'
         });
         let p;
         if (inputString != "Geral") {
-            p = client.helpers.scrollSearch({
+            p = client.helpers.scrollDocuments({
                 index: jurisprudencia_document_1.JurisprudenciaVersion,
-                _source: ["Data", "ECLI", "UUID", "Descritores",
-                    "Meio Processual.Show", "Número de Processo", "Área.Show",
-                    "Relator Nome Profissional.Show", "Secção.Show",
-                    "Votação.Show", "Decisão.Show", "Sumário"],
-                size: 1,
                 query: {
                     term: {
                         "Área.Show": inputString
@@ -57,16 +51,11 @@ function generateRSSFeed(inputString) {
             });
         }
         else {
-            p = client.helpers.scrollSearch({
+            p = client.helpers.scrollDocuments({
                 index: jurisprudencia_document_1.JurisprudenciaVersion,
-                _source: ["Data", "ECLI", "UUID", "Descritores",
-                    "Meio Processual.Show", "Número de Processo", "Área.Show",
-                    "Relator Nome Profissional.Show", "Secção.Show",
-                    "Votação.Show", "Decisão.Show", "Sumário"],
-                size: 1,
                 sort: {
                     Data: "desc"
-                },
+                }
             });
         }
         let counter = 0;
@@ -74,8 +63,7 @@ function generateRSSFeed(inputString) {
             for (var _p = true, p_1 = __asyncValues(p), p_1_1; p_1_1 = yield p_1.next(), _a = p_1_1.done, !_a; _p = true) {
                 _c = p_1_1.value;
                 _p = false;
-                const result = _c;
-                const acordao = result.body.hits.hits[0]._source;
+                const acordao = _c;
                 counter++;
                 let [dd, mm, yyyy] = ((_d = acordao.Data) === null || _d === void 0 ? void 0 : _d.split("/")) || "01/01/1900".split("/");
                 let data = new Date(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd), 12);
@@ -93,15 +81,14 @@ function generateRSSFeed(inputString) {
                 feed.addItem({
                     title: acordao["Número de Processo"] || "Número de Processo não encontrado",
                     id: id,
-                    link: publicLink + id,
+                    link: "localhost:3000" + id,
                     content: ((_j = acordao.Área) === null || _j === void 0 ? void 0 : _j.Show) + " - " + meioProcessualFormatado + " - " + ((_k = acordao["Relator Nome Profissional"]) === null || _k === void 0 ? void 0 : _k.Show) + " - " + ((_l = acordao.Secção) === null || _l === void 0 ? void 0 : _l.Show) + "<br>" +
                         "Votação: " + ((_m = acordao.Votação) === null || _m === void 0 ? void 0 : _m.Show) + "&nbsp; &nbsp; &nbsp;" + "Decisão: " + ((_o = acordao.Decisão) === null || _o === void 0 ? void 0 : _o.Show) + "<br>" +
                         "Descritores: " + descritoresFormatados + "<br> <br>" +
                         "Sumário: " + acordao.Sumário || "Sumário não encontrado",
                     date: data
                 });
-                if (counter >= 200) {
-                    yield result.clear();
+                if (counter >= 2000) {
                     break;
                 }
             }
@@ -121,21 +108,12 @@ function generateRSSFeed(inputString) {
         yield (0, promises_1.writeFile)(pathToRSS, feed.rss2());
     });
 }
-/*
-async function main(){
-    await generateRSSFeed("Geral")
-    await generateRSSFeed("Área Criminal")
-    await generateRSSFeed("Área Cível")
-    await generateRSSFeed("Área Social")
-    await generateRSSFeed("Contencioso")
-    await generateRSSFeed("Formação")
-}
-*/
 function main() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const areas = ["Geral", "Área Criminal", "Área Cível", "Área Social", "Contencioso", "Formação"];
-        const feedPromises = areas.map(area => generateRSSFeed(area));
-        yield Promise.all(feedPromises);
-    });
+    generateRSSFeed("Geral");
+    generateRSSFeed("Área Criminal");
+    generateRSSFeed("Área Cível");
+    generateRSSFeed("Área Social");
+    generateRSSFeed("Contencioso");
+    generateRSSFeed("Formação");
 }
 main();
