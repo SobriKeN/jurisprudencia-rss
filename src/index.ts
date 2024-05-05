@@ -8,10 +8,20 @@ import path from "path";
 const client = new Client({ node: process.env.ES_URL || "http://localhost:9200", auth: { username: "elastic", password: "elasticsearch" } })
 const publicLink = process.env.RSS_LINK || "http://localhost:3000/jurisprudencia"
 
+function isAreaInFeed(map: Map<string, Feed>, area: string | undefined) {
+    for (let feedArea of map.keys()) {
+        if (feedArea === area) {
+            return true;
+        }
+    }
+    // If no match is found, return false
+    return false;
+}
 
-async function generateRSSFeed(inputString: string) {
+
+async function main() {
     const feed = new Feed({
-        title: 'RSS Jurisprudência - ' + inputString,
+        title: 'RSS Jurisprudência - Geral',
         id: publicLink,
         link: publicLink,
         description: 'Latest updates from Your Website',
@@ -19,41 +29,22 @@ async function generateRSSFeed(inputString: string) {
     });
 
     let p:AsyncIterable<ScrollSearchResponse<JurisprudenciaDocument, unknown>>   
-
-    if (inputString != "Geral"){
-        p = client.helpers.scrollSearch<JurisprudenciaDocument>({
-            index: JurisprudenciaVersion,
-            _source: ["Data", "ECLI", "UUID", "Descritores", 
-            "Meio Processual.Show", "Número de Processo", "Área.Show", 
-            "Relator Nome Profissional.Show", "Secção.Show",
-            "Votação.Show", "Decisão.Show", "Sumário"],
-            size: 1,
-            query: {
-                term: {
-                    "Área.Show": inputString
-                }
-            },
-            sort: {
-                Data: "desc"
-            }
-        })
-    }
-    else {
-        p = client.helpers.scrollSearch<JurisprudenciaDocument>({
-            index: JurisprudenciaVersion,
-            _source: ["Data", "ECLI", "UUID", "Descritores", 
-            "Meio Processual.Show", "Número de Processo", "Área.Show", 
-            "Relator Nome Profissional.Show", "Secção.Show",
-            "Votação.Show", "Decisão.Show", "Sumário"],
-            size: 1,
-            sort: {
-                Data: "desc"
-            },
-        })
-    }
-
+    p = client.helpers.scrollSearch<JurisprudenciaDocument>({
+        index: JurisprudenciaVersion,
+        _source: ["Data", "ECLI", "UUID", "Descritores", 
+        "Meio Processual.Show", "Número de Processo", "Área.Show", 
+        "Relator Nome Profissional.Show", "Secção.Show",
+        "Votação.Show", "Decisão.Show", "Sumário"],
+        size: 1,
+        sort: {
+            Data: "desc"
+        },
+    })
 
     let counter = 0
+    const feeds = new Map();
+    feeds.set("Geral", feed);
+    
     for await (const result of p){
         const acordao = result.body.hits.hits[0]._source!;
         counter++
@@ -74,7 +65,31 @@ async function generateRSSFeed(inputString: string) {
             meioProcessualFormatado = acordao["Meio Processual"]?.Show;
         }
         
+        // Adiciona para RSS geral
         feed.addItem({
+            title: acordao["Número de Processo"] || "Número de Processo não encontrado",
+            id: id,
+            link: publicLink + id,
+            content: acordao.Área?.Show + " - " + meioProcessualFormatado + " - " + acordao["Relator Nome Profissional"]?.Show + " - " + acordao.Secção?.Show + "<br>" +
+                    "Votação: " + acordao.Votação?.Show +  "&nbsp; &nbsp; &nbsp;" + "Decisão: " + acordao.Decisão?.Show + "<br>" +
+                    "Descritores: " + descritoresFormatados + "<br> <br>" + 
+                    "Sumário: " + acordao.Sumário || "Sumário não encontrado",
+            date: data 
+        });
+
+        if(!isAreaInFeed(feeds, acordao.Área?.Show[0])){
+            const newFeed = new Feed({
+                title: 'RSS Jurisprudência - ' + acordao.Área?.Show,
+                id: publicLink,
+                link: publicLink,
+                description: 'Latest updates from Your Website',
+                copyright: 'Supremo Tribunal da Justiça, 2024'
+            });
+            feeds.set(acordao.Área?.Show[0], newFeed)
+        }
+
+        // Adiciona para RSS da sua área
+        feeds.get(acordao.Área?.Show[0]).addItem({
             title: acordao["Número de Processo"] || "Número de Processo não encontrado",
             id: id,
             link: publicLink + id,
@@ -92,31 +107,15 @@ async function generateRSSFeed(inputString: string) {
         }
     }
 
-    let aggKey = inputString
-    if (aggKey == "Geral"){
-        aggKey = "rss"
-    }
-    const pathToRSS = path.join(process.env.RSS_FOLDER || "", aggKey + ".xml")
-    await writeFile(pathToRSS,feed.rss2())
+    feeds.forEach(async (feed,area) => {
+        let aggKey = area
+        if (aggKey == "Geral"){
+            aggKey = "rss"
+        }
+        const pathToRSS = path.join(process.env.RSS_FOLDER || "", aggKey + ".xml")
+        await writeFile(pathToRSS,feed.rss2())
+    });
 }
-
-/*
-async function main(){
-    await generateRSSFeed("Geral")
-    await generateRSSFeed("Área Criminal")
-    await generateRSSFeed("Área Cível")
-    await generateRSSFeed("Área Social")
-    await generateRSSFeed("Contencioso")
-    await generateRSSFeed("Formação")
-}
-*/
-
-async function main(){
-    const areas = ["Geral", "Área Criminal", "Área Cível", "Área Social", "Contencioso", "Formação"];
-    const feedPromises = areas.map(area => generateRSSFeed(area));
-    await Promise.all(feedPromises);
-}
-
-
 
 main()
+
