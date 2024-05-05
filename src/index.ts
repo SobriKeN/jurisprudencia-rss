@@ -28,25 +28,19 @@ async function main() {
         copyright: 'Supremo Tribunal da Justiça, 2024'
     });
 
-    let p:AsyncIterable<ScrollSearchResponse<JurisprudenciaDocument, unknown>>   
-    p = client.helpers.scrollSearch<JurisprudenciaDocument>({
+    let p = client.helpers.scrollDocuments<JurisprudenciaDocument>({
         index: JurisprudenciaVersion,
-        _source: ["Data", "ECLI", "UUID", "Descritores", 
-        "Meio Processual.Show", "Número de Processo", "Área.Show", 
-        "Relator Nome Profissional.Show", "Secção.Show",
-        "Votação.Show", "Decisão.Show", "Sumário"],
-        size: 1,
+        //_source: ["Número de Processo", "Relator Nome Profissional", "Data"],
         sort: {
             Data: "desc"
-        },
+        }
     })
 
     let counter = 0
     const feeds = new Map();
     feeds.set("Geral", feed);
     
-    for await (const result of p){
-        const acordao = result.body.hits.hits[0]._source!;
+    for await (const acordao of p){
         counter++
         
         let [dd,mm,yyyy] = acordao.Data?.split("/") || "01/01/1900".split("/")
@@ -102,7 +96,6 @@ async function main() {
 
         
         if(counter >= 200){
-            await result.clear()
             break;
         }
     }
