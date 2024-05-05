@@ -95,7 +95,7 @@ async function main() {
         });
 
         
-        if(counter >= 2000){
+        if(counter >= 1000){
             break;
         }
     }
