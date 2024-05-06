@@ -67,16 +67,19 @@ async function main() {
         }
         
         // Adiciona para RSS geral
-        feed.addItem({
-            title: acordao["Número de Processo"] || "Número de Processo não encontrado",
-            id: id,
-            link: publicLink + id,
-            content: acordao.Área?.Show + " - " + meioProcessualFormatado + " - " + acordao["Relator Nome Profissional"]?.Show + " - " + acordao.Secção?.Show + "<br>" +
-                    "Votação: " + acordao.Votação?.Show +  "&nbsp; &nbsp; &nbsp;" + "Decisão: " + acordao.Decisão?.Show + "<br>" +
-                    "Descritores: " + descritoresFormatados + "<br> <br>" + 
-                    "Sumário: " + acordao.Sumário || "Sumário não encontrado",
-            date: data 
-        });
+        if(!(feed.items.length === parseInt(process.env.RSS_MAX_FEED_SIZE!))){
+            console.log(feed.items.length)
+            feed.addItem({
+                title: acordao["Número de Processo"] || "Número de Processo não encontrado",
+                id: id,
+                link: publicLink + id,
+                content: acordao.Área?.Show + " - " + meioProcessualFormatado + " - " + acordao["Relator Nome Profissional"]?.Show + " - " + acordao.Secção?.Show + "<br>" +
+                        "Votação: " + acordao.Votação?.Show +  "&nbsp; &nbsp; &nbsp;" + "Decisão: " + acordao.Decisão?.Show + "<br>" +
+                        "Descritores: " + descritoresFormatados + "<br> <br>" + 
+                        "Sumário: " + acordao.Sumário || "Sumário não encontrado",
+                date: data 
+            });
+        }
 
         if(!isAreaInFeed(feeds, acordao.Área?.Show[0])){
             const newFeed = new Feed({
@@ -90,22 +93,23 @@ async function main() {
         }
 
         // Adiciona para RSS da sua área
-        feeds.get(acordao.Área?.Show[0]).addItem({
-            title: acordao["Número de Processo"] || "Número de Processo não encontrado",
-            id: id,
-            link: publicLink + id,
-            content: acordao.Área?.Show + " - " + meioProcessualFormatado + " - " + acordao["Relator Nome Profissional"]?.Show + " - " + acordao.Secção?.Show + "<br>" +
-                    "Votação: " + acordao.Votação?.Show +  "&nbsp; &nbsp; &nbsp;" + "Decisão: " + acordao.Decisão?.Show + "<br>" +
-                    "Descritores: " + descritoresFormatados + "<br> <br>" + 
-                    "Sumário: " + acordao.Sumário || "Sumário não encontrado",
-            date: data 
-        });
-
-        
-        if(counter >= parseInt(process.env.RSS_MAX_FEED_SIZE!)){
-            break;
+        if(feeds.get(acordao.Área?.Show[0]).items.length >= parseInt(process.env.RSS_MAX_FEED_SIZE!)){
+            continue;
         }
-    }
+        else {
+            console.log(feeds.get(acordao.Área?.Show[0]).items.length)
+            feeds.get(acordao.Área?.Show[0]).addItem({
+                title: acordao["Número de Processo"] || "Número de Processo não encontrado",
+                id: id,
+                link: publicLink + id,
+                content: acordao.Área?.Show + " - " + meioProcessualFormatado + " - " + acordao["Relator Nome Profissional"]?.Show + " - " + acordao.Secção?.Show + "<br>" +
+                        "Votação: " + acordao.Votação?.Show +  "&nbsp; &nbsp; &nbsp;" + "Decisão: " + acordao.Decisão?.Show + "<br>" +
+                        "Descritores: " + descritoresFormatados + "<br> <br>" + 
+                        "Sumário: " + acordao.Sumário || "Sumário não encontrado",
+                date: data 
+            });
+        }
+}
 
     feeds.forEach(async (feed,area) => {
         let aggKey = area
